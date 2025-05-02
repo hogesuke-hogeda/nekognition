@@ -1,0 +1,42 @@
+{
+  "name": "nekognition",
+  "containerEnv": {
+    "CONTAINER_PROJECT_ROOT": "${containerWorkspaceFolder}"
+  },
+  "remoteUser": "vscode",
+  "features": {
+    "ghcr.io/devcontainers/features/aws-cli:1": {},
+    "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {}
+  },
+  // ホストのAWSCLI用クレデンシャルを使用する
+  "mounts": [
+    {
+      "source": "${localEnv:HOME}/.aws",
+      "target": "/home/vscode/.aws",
+      "type": "bind"
+    }
+  ],
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": ".venv/bin/python"
+      },
+			"extensions": [
+        "ms-azuretools.vscode-docker",
+        "github.copilot",
+        "github.copilot-chat",
+        "oderwat.indent-rainbow",
+        "ms-ceintl.vscode-language-pack-ja",
+        "jebbs.plantuml",
+        "shardulm94.trailing-spaces",
+        "mhutchie.git-graph"
+      ]
+    }
+	},
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/nekognition,type=bind,consistency=cached",
+  "workspaceFolder": "/nekognition",
+  "onCreateCommand": "/bin/bash ${containerWorkspaceFolder}/.devcontainer/on-create.sh"
+}
