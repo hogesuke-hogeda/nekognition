@@ -13,7 +13,10 @@ RUN apt-get update && \
     curl \
     wget \
     less \
-    groff
+    groff \
+    default-jre \
+    graphviz \
+    fonts-ipafont
 
 # ロケール設定
 RUN echo 'ja_JP.UTF-8 UTF-8' >> /etc/locale.gen && \
