@@ -1,0 +1,80 @@
+@startuml NekognitionDiagram
+skinparam classAttributeIconSize 0
+left to right direction
+
+package "Application" {
+  class NekognitionApp {
+    - app_title: str
+    - app_sub_title: str
+    - boundary_drawer: IBoundaryDrawer
+    - rekognition_client: RekognitionClient
+    --
+    + run(): void
+  }
+
+  class ImageProcessor {
+    - mosaic_drawer: IMosaicDrawer
+    - bounding_box_drawer: IBoundaryDrawer
+    --
+    + process_image(
+      image: Image
+      face_details: list[FaceDetailTypeDef]
+      detect_labels_res: DetectLabelsResponseTypeDef
+      highlight_states: dict[str, bool]
+      mosaic_size: int
+      default_color: str
+      highlight_color: str
+    ): Figure, Axes
+  }
+}
+
+package "BoundryDrawing" {
+  interface IBoundaryDrawer {
+    --
+    + draw(
+      target_image: Image
+      detect_labels_res: DetectLabelsResponseTypeDef
+      highlight_states: dict[str, bool]
+      default_color: str
+      highlight_color: str
+    ): Figure, Axes
+  }
+
+  class BoundingBoxDrawer {
+    --
+    + draw(
+      target_image: Image
+      detect_labels_res: DetectLabelsResponseTypeDef
+      highlight_states: dict[str, bool]
+      default_color: str
+      highlight_color: str
+    ): Figure, Axes
+  }
+}
+
+package "FaceMosaicDrawing" {
+  interface IFaceMosaicDrawer {
+    --
+    + apply_mosaic(
+      image: Image
+      face_details: list[FaceDetailTypeDef]
+      mosaic_size: int
+    ): Image
+  }
+
+  class EllipseFaceMosaicDrawer {
+    --
+    + apply_mosaic(
+      image: Image
+      face_details: list[FaceDetailTypeDef]
+      mosaic_size: int
+    ): Image
+  }
+}
+
+NekognitionApp --> ImageProcessor
+ImageProcessor --> IFaceMosaicDrawer
+ImageProcessor --> IBoundaryDrawer
+BoundingBoxDrawer ..|> IBoundaryDrawer
+EllipseFaceMosaicDrawer ..|> IFaceMosaicDrawer
+@enduml

@@ -3,6 +3,9 @@
   "containerEnv": {
     "CONTAINER_PROJECT_ROOT": "${containerWorkspaceFolder}"
   },
+  "remoteEnv": {
+    "PYTHONPATH": "${containerWorkspaceFolder}"
+  },
   "remoteUser": "vscode",
   "features": {
     "ghcr.io/devcontainers/features/aws-cli:1": {},
