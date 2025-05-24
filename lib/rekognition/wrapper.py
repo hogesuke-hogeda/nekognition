@@ -5,6 +5,8 @@ from mypy_boto3_rekognition.type_defs import (
     FaceDetailTypeDef,
 )
 
+from lib.rekognition.utils import validate_image_bytes
+
 
 class IRekognitionClientWrapper(ABC):
     @abstractmethod
@@ -23,6 +25,8 @@ class RekognitionClientWrapper(IRekognitionClientWrapper):
         self._client = rekognition_client
 
     def detect_faces(self, image_bytes: bytes) -> list[FaceDetailTypeDef]:
+        validate_image_bytes(image_bytes)
+
         response = self._client.detect_faces(
             Attributes=["DEFAULT"], Image={"Bytes": image_bytes}
         )
@@ -34,6 +38,8 @@ class RekognitionClientWrapper(IRekognitionClientWrapper):
         max_labels: int = 10,
         min_confidence: int = 75,
     ) -> DetectLabelsResponseTypeDef:
+        validate_image_bytes(image_bytes)
+
         return self._client.detect_labels(
             Image={"Bytes": image_bytes},
             MaxLabels=max_labels,
