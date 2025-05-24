@@ -7,13 +7,13 @@ package "Application" {
     - app_title: str
     - app_sub_title: str
     - boundary_drawer: IBoundaryDrawer
-    - rekognition_client: RekognitionClient
+    - rekognition_client: IRekognitionClientWrapper
     --
     + run(): void
   }
 
   class ImageProcessor {
-    - mosaic_drawer: IMosaicDrawer
+    - mosaic_drawer: IFaceMosaicDrawer
     - bounding_box_drawer: IBoundaryDrawer
     --
     + process_image(
@@ -30,7 +30,6 @@ package "Application" {
 
 package "BoundryDrawing" {
   interface IBoundaryDrawer {
-    --
     + draw(
       target_image: Image
       detect_labels_res: DetectLabelsResponseTypeDef
@@ -41,7 +40,6 @@ package "BoundryDrawing" {
   }
 
   class BoundingBoxDrawer {
-    --
     + draw(
       target_image: Image
       detect_labels_res: DetectLabelsResponseTypeDef
@@ -54,7 +52,6 @@ package "BoundryDrawing" {
 
 package "FaceMosaicDrawing" {
   interface IFaceMosaicDrawer {
-    --
     + apply_mosaic(
       image: Image
       face_details: list[FaceDetailTypeDef]
@@ -63,7 +60,6 @@ package "FaceMosaicDrawing" {
   }
 
   class EllipseFaceMosaicDrawer {
-    --
     + apply_mosaic(
       image: Image
       face_details: list[FaceDetailTypeDef]
@@ -72,7 +68,35 @@ package "FaceMosaicDrawing" {
   }
 }
 
+package "Rekognition" {
+
+  interface IRekognitionClientWrapper {
+    --
+    + detect_faces(image_bytes: bytes): list[FaceDetailTypeDef]
+    + detect_cats(
+      image_bytes: bytes,
+      max_labels: int,
+      min_confidence: int
+    ): DetectLabelsResponseTypeDef
+  }
+
+  class RekognitionClientWrapper {
+    - _client: RekognitionClient
+    --
+    + detect_faces(image_bytes: bytes): list[FaceDetailTypeDef]
+    + detect_cats(
+      image_bytes: bytes,
+      max_labels: int,
+      min_confidence: int
+    ): DetectLabelsResponseTypeDef
+  }
+
+}
+
+
 NekognitionApp --> ImageProcessor
+NekognitionApp -u-> IRekognitionClientWrapper
+RekognitionClientWrapper ..|> IRekognitionClientWrapper
 ImageProcessor --> IFaceMosaicDrawer
 ImageProcessor --> IBoundaryDrawer
 BoundingBoxDrawer ..|> IBoundaryDrawer

@@ -10,7 +10,7 @@ from lib.boundary_draw.utils import (
     calculate_left_top,
     generate_box,
 )
-from lib.rekognition_utils import extract_bounding_boxes_from_label
+from lib.rekognition.utils import extract_bounding_boxes_from_label
 
 
 class IBoundaryDrawer(ABC):

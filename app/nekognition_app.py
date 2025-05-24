@@ -1,13 +1,12 @@
 from PIL import Image
 import io
 
-from mypy_boto3_rekognition import RekognitionClient
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 import boto3
 import streamlit as st
 
 from lib.boundary_draw.drawer import BoundingBoxDrawer, IBoundaryDrawer
-from lib.rekognition_utils import detect_cats, detect_faces
+from lib.rekognition.wrapper import IRekognitionClientWrapper, RekognitionClientWrapper
 from lib.face_mosaic_drawer import EllipseFaceMosaicDrawer, IFaceMosaicDrawer
 from lib.image_processor import ImageProcessor
 
@@ -17,7 +16,9 @@ class NekognitionApp:
         self,
         app_title: str = "Nekognition",
         app_sub_title: str = "猫検出アプリケーション",
-        rekognition_client: RekognitionClient = boto3.client("rekognition"),
+        rekognition_client: IRekognitionClientWrapper = RekognitionClientWrapper(
+            boto3.client("rekognition", "ap-northeast-1")
+        ),
         mosaic_drawer: IFaceMosaicDrawer = EllipseFaceMosaicDrawer(),
         bounding_box_drawer: IBoundaryDrawer = BoundingBoxDrawer()
     ):
@@ -32,11 +33,11 @@ class NekognitionApp:
         """画像バイトとRekognitionの検出結果をセッションに保存"""
         st.session_state["image_bytes"] = uploaded_file.read()
         st.session_state["uploaded_filename"] = uploaded_file.name
-        st.session_state["detect_face_res"] = detect_faces(
-            self._rekognition_client, st.session_state["image_bytes"]
+        st.session_state["detect_face_res"] = self._rekognition_client.detect_faces(
+            st.session_state["image_bytes"]
         )
-        st.session_state["detect_cats_res"] = detect_cats(
-            self._rekognition_client, st.session_state["image_bytes"]
+        st.session_state["detect_cats_res"] = self._rekognition_client.detect_cats(
+            st.session_state["image_bytes"]
         )
 
     def run(self):
