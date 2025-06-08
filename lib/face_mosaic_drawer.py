@@ -2,8 +2,6 @@ from abc import ABC, abstractmethod
 from mypy_boto3_rekognition.type_defs import FaceDetailTypeDef
 from PIL import Image, ImageDraw
 
-# Strategyパターン用インターフェース
-
 
 class IFaceMosaicDrawer(ABC):
     @abstractmethod
@@ -14,6 +12,11 @@ class IFaceMosaicDrawer(ABC):
 class EllipseFaceMosaicDrawer(IFaceMosaicDrawer):
     def apply_mosaic(self, image: Image.Image, face_details: list[FaceDetailTypeDef], mosaic_size: int) -> Image.Image:
         """顔が検出された位置に楕円形のモザイクを描画する"""
+
+        # 顔が検出されなかった場合は元の画像を返す
+        if len(face_details) == 0:
+            return image
+
         mosaic_layer = Image.new("RGB", image.size)  # モザイク処理を適用した領域のレイヤー
         mask = Image.new("L", image.size, 0)  # モザイクレイヤーと元画像を合成する用のマスク
         draw = ImageDraw.Draw(mask)
