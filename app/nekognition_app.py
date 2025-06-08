@@ -3,12 +3,17 @@ import io
 
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 import boto3
+from mypy_boto3_rekognition.type_defs import (
+    DetectLabelsResponseTypeDef,
+    FaceDetailTypeDef,
+)
 import streamlit as st
 
 from lib.boundary_draw.drawer import BoundingBoxDrawer, IBoundaryDrawer
 from lib.rekognition.wrapper import IRekognitionClientWrapper, RekognitionClientWrapper
 from lib.face_mosaic_drawer import EllipseFaceMosaicDrawer, IFaceMosaicDrawer
 from lib.image_processor import ImageProcessor
+from lib.rekognition.utils import extract_cat_label, get_cat_instance_name_and_confidence
 
 
 class NekognitionApp:
@@ -76,30 +81,32 @@ class NekognitionApp:
                 self._update_session_state_with_detection(uploaded_file)
 
             # sessionから画像バイトとRekognitionからのレスポンスを取り出す
-            detect_face_res = st.session_state["detect_face_res"]
-            detect_cats_res = st.session_state["detect_cats_res"]
-            image_bytes = st.session_state["image_bytes"]
+            detect_face_res: list[FaceDetailTypeDef] = st.session_state["detect_face_res"]
+            detect_cats_res: DetectLabelsResponseTypeDef = st.session_state["detect_cats_res"]
+            image_bytes: bytes = st.session_state["image_bytes"]
 
             # 検出されたラベル毎に対応する枠線のハイライト有無を管理する Ex.：{"Cat-1": True, "Cat-2": False}
             highlight_states: dict[str, bool] = {}
 
-            if len(detect_cats_res["Labels"]) == 0:
+            cat_label = extract_cat_label(detect_cats_res)
+            if cat_label is None or "Instances" not in cat_label:
                 #### 検出結果（猫なし） ####
                 st.write("アップロードされた画像において猫は検出されませんでした")
                 ##########################
+
             else:
                 #### 検出結果（猫あり） 表示形式: Cat-<連番> | 枠線ハイライト用チェックボックス ####
-                for index, label in enumerate(detect_cats_res["Labels"]):
-                    label_name = f"Cat-{index+1}"
-                    label_confidence = f"{label['Confidence']:.2f}%"
+                for index, instance in enumerate(cat_label["Instances"]):
+                    instance_name, instance_confidence = get_cat_instance_name_and_confidence(
+                        index, instance)
                     col1, col2 = st.columns([1, 1])
                     with col1:
-                        st.write(f"- {label_name} ({label_confidence})")
+                        st.write(f"- {instance_name} ({instance_confidence})")
                     with col2:
-                        highlight_states[label_name] = st.checkbox(
-                            f"highlighten border-line ({label_name})",
+                        highlight_states[instance_name] = st.checkbox(
+                            f"highlighten border-line ({instance_name})",
                             value=False,
-                            key=label_name,
+                            key=instance_name,
                         )
                 ############################################################################
 

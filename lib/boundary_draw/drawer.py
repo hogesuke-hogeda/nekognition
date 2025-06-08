@@ -10,7 +10,11 @@ from lib.boundary_draw.utils import (
     calculate_left_top,
     generate_box,
 )
-from lib.rekognition.utils import extract_bounding_boxes_from_label
+from lib.rekognition.utils import (
+    extract_bounding_boxes_from_instance,
+    extract_cat_label,
+    get_cat_instance_name_and_confidence,
+)
 
 
 class IBoundaryDrawer(ABC):
@@ -46,12 +50,17 @@ class BoundingBoxDrawer(IBoundaryDrawer):
 
         image_width, image_height = target_image.size
 
-        for index, label in enumerate(detect_labels_res["Labels"]):
-            label_name = f"Cat-{index+1}"
-            label_confidence = f"{label['Confidence']:.2f}%" if label["Confidence"] else "信頼度情報なし"
-            bounding_boxes = extract_bounding_boxes_from_label(label)
+        # 猫が検出されていなければ何も描画しない
+        cat_label = extract_cat_label(detect_labels_res)
+        if cat_label is None or "Instances" not in cat_label:
+            return fig, ax
 
-            color = highlight_color if highlight_states[label_name] else default_color
+        for index, instance in enumerate(cat_label["Instances"]):
+            instance_name, instance_confidence = get_cat_instance_name_and_confidence(
+                index, instance)
+            bounding_boxes = extract_bounding_boxes_from_instance(instance)
+
+            color = highlight_color if highlight_states[instance_name] else default_color
 
             for bounding_box in bounding_boxes:
                 left, top = calculate_left_top(
@@ -65,7 +74,7 @@ class BoundingBoxDrawer(IBoundaryDrawer):
                 ax.text(
                     left,
                     top - 10,
-                    f"{label_name}({label_confidence})",
+                    f"{instance_name}({instance_confidence})",
                     color=color,
                     fontsize=10,
                     weight='bold'
